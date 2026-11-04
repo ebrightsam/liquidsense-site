@@ -118,3 +118,8 @@ input:focus, select:focus { outline: none; border-color: var(--water); }
   .top nav { gap: 14px; }
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+
+.btn.soon { background: transparent; color: var(--ink); border: 1px solid var(--line); cursor: default; }
+.btn.soon:hover { opacity: 1; }
+.launch { margin: 18px 0 0; color: var(--muted); font-size: 15px; }
+.launch strong { color: var(--water); font-weight: 500; }
