@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://ebrightsam.github.io/liquidsense-site/sitemap.xml

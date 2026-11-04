@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pay in 4 Calculator: Payment Dates and Amounts | LiquidSense</title>
+<meta name="description" content="Free Pay in 4 calculator. See each of the four payments and the date it comes out, and which paycheck covers it. Nothing you type leaves your browser.">
+<link rel="icon" href="assets/icon.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="./"><img src="assets/icon.png" alt="">LiquidSense</a>
+    <nav><a href="calculator.html">Payday</a><a href="credit-card-payoff.html">Card payoff</a></nav>
+  </header>
+  <h1>Pay in 4: when does each payment hit?</h1>
+  <p class="lead">Buy now, pay later splits a purchase into four payments, usually two weeks apart. See each one, its date, and the paycheck that has to cover it.</p>
+  <div class="calc">
+    <div class="card">
+      <div class="field"><label for="amt">Purchase total</label><input id="amt" inputmode="decimal" value="240"></div>
+      <div class="field"><label for="first">First payment (usually today)</label><input id="first" type="date"></div>
+      <div class="field"><label for="every">Time between payments</label>
+        <select id="every"><option value="14">Every 2 weeks</option><option value="30">Monthly</option></select>
+      </div>
+      <div class="field"><label for="payday">Your next payday (optional)</label><input id="payday" type="date"></div>
+      <p class="muted" style="font-size:14px">A missed payment can mean a late fee and, with some lenders, a hit to your credit. Plan for all four before you buy.</p>
+    </div>
+    <div>
+      <div id="result" aria-live="polite"></div>
+      <div class="card" style="margin-top:20px">
+        <h3>Keep every plan on your timeline</h3>
+        <p class="muted">LiquidSense tracks Pay in 4 and installment plans next to your bills and card payments, counts down the payments left, and warns you before money gets tight.</p>
+        <a class="btn" href="./">Coming Jan 1: App Store and Google Play</a>
+      </div>
+    </div>
+  </div>
+  <footer>Estimates for planning only, not financial advice. Lenders may round payments differently. Nothing you type is sent anywhere. <a href="privacy.html">Privacy</a></footer>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const iso = (d) => d.toISOString().slice(0, 10);
+const parse = (s) => s ? new Date(s + 'T00:00:00Z') : null;
+const fmt = (d) => d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
+const today = new Date(); $('first').value = iso(new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())));
+function update() {
+  const total = Math.round((parseFloat(($('amt').value || '').replace(/[$,\s]/g, '')) || 0) * 100);
+  const first = parse($('first').value), every = +$('every').value, payday = parse($('payday').value);
+  if (!total || !first) { $('result').innerHTML = ''; return; }
+  // Four payments; any leftover cent goes on the first one, as most lenders do.
+  const base = Math.floor(total / 4), extra = total - base * 4;
+  const rows = [0, 1, 2, 3].map((i) => {
+    const d = new Date(first);
+    if (every === 30) d.setUTCMonth(d.getUTCMonth() + i); else d.setUTCDate(d.getUTCDate() + 14 * i);
+    let cover = '';
+    if (payday) {
+      // Assume paid every two weeks from that payday: find the last payday on or before this date.
+      const diff = Math.floor((d - payday) / 86400000);
+      cover = diff < 0 ? 'from what’s in checking now' : `from your ${fmt(new Date(payday.getTime() + Math.floor(diff / 14) * 14 * 86400000))} paycheck`;
+    }
+    return `<li><span>${fmt(d)}${cover ? `<br><span class="muted" style="font-size:14px">${cover}</span>` : ''}</span><span>$${((base + (i === 0 ? extra : 0)) / 100).toFixed(2)}</span></li>`;
+  });
+  $('result').innerHTML = `<div class="card"><p class="muted" style="margin:0">Each payment</p>
+    <div class="result">$${(base / 100).toFixed(2)}</div>
+    <div class="plan" style="background:transparent;padding:0"><ul>${rows.join('')}</ul></div>
+    <p class="muted" style="font-size:14px">${every === 14 ? 'Done in six weeks.' : 'Done in three months.'} The first payment usually comes out at checkout.</p></div>`;
+}
+['amt', 'first', 'every', 'payday'].forEach((id) => $(id).addEventListener('input', update));
+update();
+</script>
+</body>
+</html>

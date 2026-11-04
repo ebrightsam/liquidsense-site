@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Credit Card Payoff Calculator: Minimum vs. Fixed Payment | LiquidSense</title>
+<meta name="description" content="Free credit card payoff calculator. See how long the minimum payment takes and how much interest it costs, compared with a fixed monthly payment. Nothing you type leaves your browser.">
+<link rel="icon" href="assets/icon.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="./"><img src="assets/icon.png" alt="">LiquidSense</a>
+    <nav><a href="calculator.html">Payday</a><a href="pay-in-4.html">Pay in 4</a></nav>
+  </header>
+  <h1>How long will my card take to pay off?</h1>
+  <p class="lead">Compare paying the minimum with a fixed amount each month: how many months it takes and how much goes to interest.</p>
+  <div class="calc">
+    <div class="card">
+      <div class="field"><label for="bal">Card balance</label><input id="bal" inputmode="decimal" value="3240"></div>
+      <div class="field"><label for="apr">Interest rate (APR %)</label><input id="apr" inputmode="decimal" value="24.99"></div>
+      <div class="field"><label for="pay">Fixed payment each month</label><input id="pay" inputmode="decimal" value="200"></div>
+      <p class="muted" style="font-size:14px">The minimum uses a common card formula: 1% of the balance plus that month's interest, at least $25. Your statement's number is the one that counts.</p>
+    </div>
+    <div>
+      <div id="result" aria-live="polite"></div>
+      <div class="card" style="margin-top:20px">
+        <h3>See every card on one timeline</h3>
+        <p class="muted">LiquidSense puts card payments, bills and paychecks on one 45-day runway, shows your debt-free date and the best order to pay things off.</p>
+        <a class="btn" href="./">Coming Jan 1: App Store and Google Play</a>
+      </div>
+    </div>
+  </div>
+  <footer>Estimates for planning only, not financial advice. Interest is approximated monthly, so your card's numbers may differ slightly. Nothing you type is sent anywhere. <a href="privacy.html">Privacy</a></footer>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const num = (id) => Math.max(0, parseFloat(($(id).value || '').replace(/[$,\s]/g, '')) || 0);
+const money = (c) => '$' + Math.round(c / 100).toLocaleString('en-US');
+// Cents throughout, like the app. Returns the balance after each month.
+function run(balance, aprBps, payFor) {
+  const path = [balance]; let interest = 0, b = balance;
+  for (let m = 0; m < 600 && b > 0; m++) {
+    const i = Math.round(b * aprBps / 10000 / 12);
+    const pay = Math.min(b + i, payFor(b, i));
+    if (pay <= i) return { never: true, path };
+    b = b + i - pay; interest += i; path.push(b);
+  }
+  return { months: path.length - 1, interest, path, never: b > 0 };
+}
+function chart(a, b) {
+  const W = 520, H = 200, n = Math.max(a.path.length, b.path.length), max = a.path[0] || 1;
+  const pts = (p) => p.map((v, i) => `${(i / Math.max(1, n - 1)) * W},${H - (v / max) * (H - 10)}`).join(' ');
+  return `<svg viewBox="0 0 ${W} ${H + 20}" role="img" aria-label="Balance over time">
+    <polyline class="line-short" points="${pts(a.path)}"/><polyline class="line-ok" points="${pts(b.path)}"/>
+    <text class="axis" x="0" y="${H + 16}">Today</text><text class="axis" x="${W}" y="${H + 16}" text-anchor="end">${Math.round((n - 1) / 12 * 10) / 10} years</text></svg>`;
+}
+function update() {
+  const bal = Math.round(num('bal') * 100), apr = Math.round(num('apr') * 100), fixed = Math.round(num('pay') * 100);
+  if (!bal) { $('result').innerHTML = ''; return; }
+  const min = run(bal, apr, (b, i) => Math.max(2500, Math.round(b * 0.01) + i));
+  const fix = run(bal, apr, () => fixed);
+  const yrs = (m) => m >= 12 ? `${Math.floor(m / 12)} yr ${m % 12} mo` : `${m} months`;
+  const fixLine = fix.never ? `<p class="short">$${(fixed / 100).toFixed(0)} a month doesn't cover the interest. Try a bigger payment.</p>`
+    : `<p><span class="ok">Fixed $${(fixed / 100).toFixed(0)}:</span> paid off in ${yrs(fix.months)}, ${money(fix.interest)} in interest.</p>`;
+  const saved = !fix.never && !min.never ? Math.max(0, min.interest - fix.interest) : 0;
+  $('result').innerHTML = `<div class="card">
+    <p class="muted" style="margin:0">Paying the minimum</p>
+    <div class="result short">${min.never ? 'Never paid off' : yrs(min.months)}</div>
+    <p>${min.never ? '' : `${money(min.interest)} in interest.`}</p>
+    ${fixLine}
+    ${saved ? `<p>A fixed payment saves <strong>${money(saved)}</strong> in interest.</p>` : ''}
+    ${chart(min, fix.never ? { path: [bal] } : fix)}
+    <p class="muted" style="font-size:14px">Red: minimum payments. Green: fixed payment.</p></div>`;
+}
+['bal', 'apr', 'pay'].forEach((id) => $(id).addEventListener('input', update));
+update();
+</script>
+</body>
+</html>
