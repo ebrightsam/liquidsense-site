@@ -33,7 +33,8 @@ a:focus-visible, .btn:focus-visible { outline: 2px solid var(--water); outline-o
 .top { display: flex; align-items: center; gap: 24px; padding: 22px 0; }
 .top img { width: 30px; height: 30px; border-radius: 8px; display: block; }
 .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 500; letter-spacing: -0.2px; }
-.top nav { margin-left: auto; display: flex; gap: 22px; font-size: 15px; }
+.top nav { margin-left: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px 22px; font-size: 15px; }
+.top nav a[aria-current] { color: var(--ink, inherit); font-weight: 600; }
 .top nav a { color: var(--muted); }
 
 h1, h2, h3 { margin: 0; font-weight: 300; letter-spacing: -0.03em; }
