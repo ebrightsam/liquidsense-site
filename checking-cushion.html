@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How Much Should I Keep in Checking? Calculator | LiquidSense</title>
+<meta name="description" content="Free calculator: how much to keep in checking so bills never bounce, based on your paycheck, how often you’re paid and when bills land. Nothing you type leaves your browser.">
+<link rel="icon" href="assets/icon.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="./"><img src="assets/icon.png" alt="">LiquidSense</a>
+    <nav><a href="calculator.html">Payday</a><a href="credit-card-payoff.html">Card payoff</a><a href="pay-in-4.html">Pay in 4</a><a href="checking-cushion.html" aria-current="page">Cushion</a></nav>
+  </header>
+  <h1>How much should I keep in checking?</h1>
+  <p class="lead">Enough that the bills due before your next paycheck always clear. That depends less on your income than on timing: a month of bills can land in one two-week stretch.</p>
+  <div class="calc">
+    <div class="card">
+      <div class="field"><label for="pay">Take-home pay per paycheck</label><input id="pay" inputmode="decimal" value="2000"></div>
+      <div class="field"><label for="freq">How often you’re paid</label>
+        <select id="freq"><option value="52">Weekly</option><option value="26" selected>Every 2 weeks</option><option value="24">Twice a month</option><option value="12">Monthly</option></select>
+      </div>
+      <div class="field"><label for="bills">Fixed bills per month (rent, phone, insurance, card and loan payments)</label><input id="bills" inputmode="decimal" value="2200"></div>
+      <div class="field"><label for="spend">Everyday spending per month (groceries, gas)</label><input id="spend" inputmode="decimal" value="800"></div>
+    </div>
+    <div>
+      <div id="result" aria-live="polite"></div>
+      <div class="card" style="margin-top:20px">
+        <h3>See your real dates, not the worst case</h3>
+        <p class="muted">LiquidSense puts your actual paydays and due dates on one timeline, shows the lowest your balance will get, and what to move if it dips below zero.</p>
+        <a class="btn" href="./">Coming Jan 1: App Store and Google Play</a>
+      </div>
+    </div>
+  </div>
+  <footer>A rule of thumb for planning, not financial advice. Nothing you type is sent anywhere. <a href="privacy.html">Privacy</a></footer>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const money = (id) => Math.max(0, parseFloat(($(id).value || '').replace(/[$,\s]/g, '')) || 0);
+const usd = (x) => '$' + Math.round(x).toLocaleString('en-US');
+function update() {
+  const pay = money('pay'), perYear = +$('freq').value, bills = money('bills'), spend = money('spend');
+  if (!pay) { $('result').innerHTML = ''; return; }
+  const perMonth = perYear / 12;                    // paychecks in an average month
+  const spendPer = spend / perMonth;                // everyday spending between two paychecks
+  // Worst case: every fixed bill lands before the next paycheck. Even case: they're spread out.
+  const worst = Math.max(0, bills + spendPer - pay);
+  const even = Math.max(0, bills / perMonth + spendPer - pay);
+  const cushion = spend / 4.33;                     // about a week of everyday spending, for surprises
+  const keep = worst + cushion;
+  const left = pay * perMonth - bills - spend;
+  const warn = left < 0
+    ? `<p style="color:var(--short)">Your bills and spending are about ${usd(-left)} a month more than you take home, so no cushion lasts. Cutting or moving something comes first.</p>` : '';
+  $('result').innerHTML = `<div class="card">${warn}<p class="muted" style="margin:0">Keep at least this in checking on payday, before the paycheck lands</p>
+    <div class="result">${usd(keep)}</div>
+    <div class="plan" style="background:transparent;padding:0"><ul>
+      <li><span>If a month of bills lands before one paycheck</span><span>${usd(worst)}</span></li>
+      <li><span>Cushion for surprises (about a week of spending)</span><span>${usd(cushion)}</span></li>
+      <li><span class="muted">If your bills were spread evenly between paychecks</span><span class="muted">${usd(even + cushion)}</span></li>
+    </ul></div>
+    <p class="muted" style="font-size:14px">${perYear === 26 ? 'Paid every 2 weeks, two months a year have a third paycheck: a good time to build this up.' : perYear === 12 ? 'Paid monthly, the whole month’s bills come out of one paycheck, so timing matters most.' : 'Your real number sits between the two, depending on when your bills are due.'}</p></div>`;
+}
+['pay', 'freq', 'bills', 'spend'].forEach((id) => $(id).addEventListener('input', update));
+update();
+</script>
+</body>
+</html>
